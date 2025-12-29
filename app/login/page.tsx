@@ -31,13 +31,11 @@ export default function AdminLoginPage() {
   const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
-    // Kiểm tra nếu đã đăng nhập
     const token = localStorage.getItem("token");
     if (token) {
       router.push("/admin");
     }
 
-    // Load Google Sign-In SDK
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
@@ -48,7 +46,7 @@ export default function AdminLoginPage() {
     return () => {
       document.body.removeChild(script);
     };
-  }, []);
+  }, [router]);
 
   const initializeGoogle = () => {
     if (window.google && GOOGLE_CLIENT_ID) {
@@ -62,19 +60,15 @@ export default function AdminLoginPage() {
   const handleGoogleCallback = async (response: any) => {
     setGoogleLoading(true);
     setError("");
-
     try {
-      // Decode the credential token to get access token
       const res = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential: response.credential }),
       });
-
       const data = await res.json();
-
       if (data.success) {
-        localStorage.setItem("token", data.data.token);
+        localStorage.setItem("token", data.data.accessToken);
         localStorage.setItem("user", JSON.stringify(data.data.user));
         router.push("/admin");
       } else {
@@ -96,18 +90,15 @@ export default function AdminLoginPage() {
           if (tokenResponse.access_token) {
             setGoogleLoading(true);
             setError("");
-
             try {
               const res = await fetch("/api/auth/google", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ accessToken: tokenResponse.access_token }),
               });
-
               const data = await res.json();
-
               if (data.success) {
-                localStorage.setItem("token", data.data.token);
+                localStorage.setItem("token", data.data.accessToken);
                 localStorage.setItem("user", JSON.stringify(data.data.user));
                 router.push("/admin");
               } else {
@@ -123,7 +114,7 @@ export default function AdminLoginPage() {
       });
       client.requestAccessToken();
     } else {
-      setError("Google Sign-In chưa được cấu hình. Vui lòng thêm NEXT_PUBLIC_GOOGLE_CLIENT_ID");
+      setError("Đăng nhập không thành công");
     }
   };
 
@@ -131,18 +122,15 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-
       const data = await res.json();
-
       if (data.success) {
-        localStorage.setItem("token", data.data.token);
+        localStorage.setItem("token", data.data.accessToken);
         localStorage.setItem("user", JSON.stringify(data.data.user));
         router.push("/admin");
       } else {
@@ -158,7 +146,6 @@ export default function AdminLoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <span className="text-4xl">💰</span>
@@ -167,7 +154,6 @@ export default function AdminLoginPage() {
           <p className="text-gray-500 mt-1">Đăng nhập để quản lý hệ thống</p>
         </div>
 
-        {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm mb-6">
             <div className="flex items-center space-x-2">
@@ -177,7 +163,6 @@ export default function AdminLoginPage() {
           </div>
         )}
 
-        {/* Google Login Button */}
         <button
           onClick={handleGoogleLogin}
           disabled={googleLoading}
@@ -210,7 +195,6 @@ export default function AdminLoginPage() {
           )}
         </button>
 
-        {/* Divider */}
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200"></div>
@@ -220,7 +204,6 @@ export default function AdminLoginPage() {
           </div>
         </div>
 
-        {/* Email/Password Form */}
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -262,7 +245,6 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        {/* Test Accounts */}
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <p className="text-sm text-gray-600 font-medium mb-2">🔑 Tài khoản test:</p>
           <div className="text-sm text-gray-500 space-y-1">
@@ -271,7 +253,6 @@ export default function AdminLoginPage() {
           </div>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6">
           © 2025 EasyFin. All rights reserved.
         </p>

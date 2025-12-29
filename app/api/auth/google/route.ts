@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "Đăng nhập thành công",
       data: {
-        token,
+        accessToken: token,
         user: {
           id: user.id,
           email: user.email,
