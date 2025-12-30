@@ -18,6 +18,8 @@ interface GoogleUserInfo {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    console.log("[DEBUG] Google Auth Request Body Keys:", Object.keys(body));
+    
     // credential: từ Web (GSI)
     // idToken: từ Mobile (React Native)
     // accessToken: từ Mobile hoặc OAuth flow truyền thống
@@ -26,21 +28,31 @@ export async function POST(request: NextRequest) {
     let googleUser: GoogleUserInfo | null = null;
     const idTokenToVerify = credential || idToken;
 
+    if (idTokenToVerify) {
+        console.log("[DEBUG] Verifying ID Token (length):", idTokenToVerify.length);
+    } else if (accessToken) {
+        console.log("[DEBUG] Verifying Access Token (length):", accessToken.length);
+    } else {
+        console.log("[DEBUG] No token provided");
+    }
+
     // Cách 1: Xác thực ID Token (Khuyên dùng cho cả Web & Mobile)
     if (idTokenToVerify) {
       // Gọi Google để verify token thay vì decode local (bảo mật hơn)
-      const verifyRes = await fetch(
-        `https://oauth2.googleapis.com/tokeninfo?id_token=${idTokenToVerify}`
-      );
+      const verifyUrl = `https://oauth2.googleapis.com/tokeninfo?id_token=${idTokenToVerify}`;
+      const verifyRes = await fetch(verifyUrl);
 
       if (!verifyRes.ok) {
+        const errorText = await verifyRes.text();
+        console.error("[DEBUG] Google Token Verification Failed:", verifyRes.status, errorText);
         return NextResponse.json(
-          { success: false, error: "Google ID Token không hợp lệ" },
+          { success: false, error: "Google ID Token không hợp lệ: " + errorText },
           { status: 401 }
         );
       }
 
       const payload = await verifyRes.json();
+      console.log("[DEBUG] Google Token Verified. Email:", payload.email);
       
       // Kiểm tra audience (client_id) nếu cần thiết để tăng bảo mật
       // if (payload.aud !== process.env.GOOGLE_CLIENT_ID) ...
@@ -54,6 +66,7 @@ export async function POST(request: NextRequest) {
     }
     // Cách 2: Sử dụng Access Token
     else if (accessToken) {
+      console.log("[DEBUG] Fetching user info with Access Token");
       const googleResponse = await fetch(
         "https://www.googleapis.com/oauth2/v2/userinfo",
         {
@@ -62,6 +75,8 @@ export async function POST(request: NextRequest) {
       );
 
       if (!googleResponse.ok) {
+        const errorText = await googleResponse.text();
+        console.error("[DEBUG] Google UserInfo Failed:", googleResponse.status, errorText);
         return NextResponse.json(
           { success: false, error: "Token Google không hợp lệ" },
           { status: 401 }
@@ -69,6 +84,7 @@ export async function POST(request: NextRequest) {
       }
 
       const rawUser = await googleResponse.json();
+      console.log("[DEBUG] UserInfo Fetched. Email:", rawUser.email);
       googleUser = {
         email: rawUser.email,
         name: rawUser.name,
