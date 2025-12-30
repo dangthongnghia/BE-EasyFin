@@ -114,7 +114,7 @@ export default function AdminLoginPage() {
       });
       client.requestAccessToken();
     } else {
-      setError("ĐăHayng nhập không thành công");
+      setError("Đăng nhập không thành công");
     }
   };
 
