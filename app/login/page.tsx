@@ -82,6 +82,10 @@ export default function AdminLoginPage() {
   };
 
   const handleGoogleLogin = () => {
+    console.log("Checking Google Login Requirements:");
+    console.log("- window.google:", !!window.google);
+    console.log("- GOOGLE_CLIENT_ID:", GOOGLE_CLIENT_ID);
+
     if (window.google && GOOGLE_CLIENT_ID) {
       const client = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
